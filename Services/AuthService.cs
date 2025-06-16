@@ -26,13 +26,13 @@ public class AuthService
 {
     // instance variables
     private readonly AppDbContext _ctxt; // granting read/write access to postgreSQL database tables (AppDbContext -> EF core)
-    private readonly IConfiguration _config; // granting AuthService read access to secrets from appsettings.json or env var
+    // private readonly IConfiguration _config; // granting AuthService read access to secrets from appsettings.json or env var
 
     // contructor injection; for ease in unit-test & also keeps dependencies explicit
     public AuthService(AppDbContext context, IConfiguration configuration)
     {
         _ctxt = context;
-        _config = configuration;
+        // _config = configuration;
     }
 
     public async Task<User> Register(User user, string password)
@@ -80,9 +80,14 @@ public class AuthService
             new(ClaimTypes.Name, user.Username)
         };
 
+        // reading key from dotenv file
+        var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY");
+        if(string.IsNullOrEmpty(jwtKey))
+            throw new Exception("JWT_KEY is not empty or not set!");
+
         // load key from appsettings.json and convert it into a SymmetricSecurityKey -> loading of key
         var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
+            Encoding.UTF8.GetBytes(jwtKey!));
         
         // bundle converted key and hmac algorithm into signing cred -> -> signing of key
         var creds = new SigningCredentials(

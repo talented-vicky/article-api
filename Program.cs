@@ -2,6 +2,7 @@ using ArticleApi.Models;
 using ArticleApi.Data;
 using ArticleApi.Services;
 
+using DotNetEnv;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -10,6 +11,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// accessing dotenv file
+Env.Load();
 
 // register controllers
 builder.Services.AddControllers();
@@ -22,7 +26,11 @@ builder.Services.AddDbContext<AppDbContext>(opts =>
 builder.Services.AddScoped<AuthService>();
 
 // JWT Bearer Authentication
-var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!);
+var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY");
+if(string.IsNullOrEmpty(jwtKey))
+    throw new Exception("JWT_KEY is not set in the environment!");
+    
+var key = Encoding.UTF8.GetBytes(jwtKey!);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(opts => 
     {

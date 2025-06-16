@@ -24,7 +24,7 @@ obj/
 appsettings.Development.json
 secrets.json
 
-# JWT secret key file (if separated)
+# JWT secret key file
 .env
 
 # Package manager files
