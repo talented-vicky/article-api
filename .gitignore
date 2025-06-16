@@ -1,0 +1,37 @@
+# Build and publish
+bin/
+obj/
+*.exe
+*.dll
+*.pdb
+
+# Rider
+.idea/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Mac/Linux files
+.DS_Store
+*.swp
+
+# Logs
+*.log
+
+# Environment variables and secrets
+appsettings.Development.json
+secrets.json
+
+# JWT secret key file (if separated)
+.env
+
+# Package manager files
+node_modules/
+packages/
+
+# Test results
+TestResults/
+*.trx
+*.coverage
