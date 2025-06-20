@@ -9,15 +9,12 @@ using Microsoft.AspNetCore.Mvc;
 namespace ArticleApi.Controllers;
 
 [ApiController]
-[Route("api/[controller]")] // automatically mapping this controller to 'api/auth'
+[Route("api/auth")] // automatically mapping this controller to 'api/auth'
 public class AuthController : ControllerBase
 {
     private readonly AuthService _authService;
 
-    public AuthController(AuthService authService)
-    {
-        _authService = authService;
-    }
+    public AuthController(AuthService authService) => _authService = authService;
 
     [HttpPost("register")] // becomes -> "/api/auth/register"
     public async Task<ActionResult<User>> Register (RegistrationDto req)

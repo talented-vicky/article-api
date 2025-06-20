@@ -29,11 +29,7 @@ public class AuthService
     // private readonly IConfiguration _config; // granting AuthService read access to secrets from appsettings.json or env var
 
     // contructor injection; for ease in unit-test & also keeps dependencies explicit
-    public AuthService(AppDbContext context, IConfiguration configuration)
-    {
-        _ctxt = context;
-        // _config = configuration;
-    }
+    public AuthService(AppDbContext context) => _ctxt = context;
 
     public async Task<User> Register(User user, string password)
     {
@@ -83,15 +79,13 @@ public class AuthService
         // reading key from dotenv file
         var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY");
         if(string.IsNullOrEmpty(jwtKey))
-            throw new Exception("JWT_KEY is not empty or not set!");
+            throw new Exception("JWT_KEY is empty or not set!");
 
-        // load key from appsettings.json and convert it into a SymmetricSecurityKey -> loading of key
-        var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(jwtKey!));
+        // Convert key into a SymmetricSecurityKey -> loading of key
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey!));
         
         // bundle converted key and hmac algorithm into signing cred -> -> signing of key
-        var creds = new SigningCredentials(
-            key, SecurityAlgorithms.HmacSha512Signature);
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
         
         var token = new JwtSecurityToken(
             claims: claims,
