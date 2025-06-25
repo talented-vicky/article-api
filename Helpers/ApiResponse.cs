@@ -11,17 +11,9 @@ public static class ApiResponse
         return new OkObjectResult(resp);
     }
 
-    public static IActionResult Paginated<T>(IEnumerable<T> items, int total, int pageNo, int pageSize, string? msg = null)
+    public static IActionResult Paginated<T>(IEnumerable<T> items, int total, int page, int pageSize)
     {
-        var pagination = new PaginatedResponse<T>
-        {
-            Items = items,
-            TotalItems = total,
-            PageNumber = pageNo,
-            PageSize = pageSize
-        };
-
-        var resp = new BaseResponse<PaginatedResponse<T>>(true, msg, pagination);
+        var resp = new PaginatedResponse<T>(true, total, page, pageSize, items);
         return new OkObjectResult(resp);
     }
 
@@ -37,14 +29,9 @@ public static class ApiResponse
         return new ObjectResult(resp){ StatusCode = code };
     }
 
-    public static IActionResult NotFound(string msg = "Resource Not Found")
+    public static IActionResult NotFound(string msg)
     {
         var resp = new BaseResponse<string>(false, msg, null);
         return new NotFoundObjectResult(resp);
-    }
-
-    public static IActionResult NoResult()
-    {
-        return new NoContentResult();
     }
 }

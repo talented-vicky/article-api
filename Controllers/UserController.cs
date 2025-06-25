@@ -2,6 +2,8 @@ using ArticleApi.Models;
 using ArticleApi.Data;
 using ArticleApi.Dtos;
 
+using ArticleApi.Helpers;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,39 +17,40 @@ public class UserController : ControllerBase
 
     public UserController(AppDbContext context) => _ctxt = context;
 
-    [HttpGet("all")]
-    public async Task<ActionResult<IEnumerable<UserDto>>> FetchAllUsers()
+    [HttpGet]
+    public async Task<IActionResult> FetchAllUsers(int page = 1, int pageSize = 2)
     {
         var totalItems = await _ctxt.Users.CountAsync();
-        
         var users = await _ctxt.Users
-            .Select(user => new UserDto
+            .OrderBy(user => user.Id)
+            // .Skip()
+            .Take(pageSize)
+            .Select(user => new 
             {
                 Id = user.Id,
-                Email = user.Email,
-                Username = user.Username
+                Username = user.Username,
+                Email = user.Email
             })
-            .ToListAsync();
+            .ToListAsync();        
 
-        return Ok(new {
-            total = totalItems,
-            data = users
-        });
+        return ApiResponse.Paginated(users, totalItems, page, pageSize);
     }
 
     [HttpGet("{id:int}")] // maps to api/users/4
-    public async Task<ActionResult<UserDto>> GetOneUser(int id)
+    public async Task<IActionResult> GetOneUser(int id)
     {
         var user = await _ctxt.Users
             .Where(user => user.Id == id)
-            .Select(user => new UserDto
+            .Select(user => new UserDataDto
             {
                 Id = user.Id,
-                Email = user.Email,
-                Username = user.Username
+                Username = user.Username,
+                Email = user.Email
             })
             .FirstOrDefaultAsync();
         
-        return user is null ? NotFound($"User {id} not found") : Ok(user);
+        return user is null ? 
+            ApiResponse.NotFound("User Not Found") : 
+            ApiResponse.Success(user, "Successfully Fetched User");
     }
 }
