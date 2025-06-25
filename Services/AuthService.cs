@@ -73,7 +73,8 @@ public class AuthService
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Name, user.Username)
+            new(ClaimTypes.Email, user.Email),
+            new(ClaimTypes.Name, user.Username),
         };
 
         // reading key from dotenv file
