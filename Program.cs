@@ -25,6 +25,15 @@ builder.Services.AddDbContext<AppDbContext>(opts =>
 // register AuthService
 builder.Services.AddScoped<AuthService>();
 
+// CORS policy
+builder.Services.AddCors(options => 
+{
+    options.AddPolicy("AllowLocalhost", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod();
+    });
+});
+
 // JWT Bearer Authentication
 var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY");
 if(string.IsNullOrEmpty(jwtKey))
@@ -55,6 +64,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors("AllowLocalhost");
 
 app.UseHttpsRedirection();
 

@@ -52,7 +52,7 @@ public class PostController : ControllerBase
         var posts = await _ctxt.Posts
             .Include(post => post.User)
             .OrderBy(post => post.Id)
-            // .Skip()
+            // .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Select(post => new PostDataDto
             {
