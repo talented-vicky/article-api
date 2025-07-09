@@ -6,7 +6,6 @@ using DotNetEnv;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 using System.Text;
 
@@ -69,7 +68,7 @@ app.UseCors("AllowLocalhost");
 
 app.UseHttpsRedirection();
 
-// Authorization middleware
+// Authentication and Authorization middleware
 app.UseAuthentication();
 app.UseAuthorization();
 

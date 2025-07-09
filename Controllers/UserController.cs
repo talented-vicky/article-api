@@ -6,6 +6,8 @@ using ArticleApi.Helpers;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace ArticleApi.Controllers;
 
@@ -17,13 +19,59 @@ public class UserController : ControllerBase
 
     public UserController(AppDbContext context) => _ctxt = context;
 
+    [Authorize]
+    [HttpGet("dashboard")]
+    public async Task<IActionResult> GetDashboard()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if(userIdClaim == null)
+            return ApiResponse.NotFound("Invalid User Token");
+
+        int userId = int.Parse(userIdClaim.Value);
+
+        var user = await _ctxt.Users
+            .Where(user => user.Id == userId)
+            .Select(u => new 
+            {
+                u.Id,
+                u.Username,
+                u.Email,
+
+                PostCount = u.Posts.Count,
+                RecentPosts = u.Posts
+                    .OrderByDescending(post => post.CreatedAt)
+                    .Take(4)
+                    .Select(p => new
+                    {
+                        p.Id,
+                        p.Title,
+                        p.Content,
+                        p.Likes,
+                        p.Views,
+                        p.CreatedAt
+                    }),
+                Analytics = new 
+                {
+                    TotalViews = u.Posts.Sum(post => post.Views),
+                    TotalLikes = u.Posts.Sum(post => post.Likes)
+                },
+                TotalComments = u.Comments.Count(comment => comment.UserId == u.Id)
+            })
+            .FirstOrDefaultAsync();
+        
+        if(user == null)
+            return ApiResponse.NotFound("User Not Found");
+
+        return ApiResponse.Success(user, "Successfully Fetched Dashboard Info");
+    }
+
     [HttpGet]
     public async Task<IActionResult> FetchAllUsers(int page = 1, int pageSize = 2)
     {
         var totalItems = await _ctxt.Users.CountAsync();
         var users = await _ctxt.Users
             .OrderBy(user => user.Id)
-            // .Skip()
+            .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Select(user => new 
             {
