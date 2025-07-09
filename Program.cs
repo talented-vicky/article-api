@@ -6,7 +6,6 @@ using DotNetEnv;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 using System.Text;
 
@@ -24,6 +23,15 @@ builder.Services.AddDbContext<AppDbContext>(opts =>
 
 // register AuthService
 builder.Services.AddScoped<AuthService>();
+
+// CORS policy
+builder.Services.AddCors(options => 
+{
+    options.AddPolicy("AllowLocalhost", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod();
+    });
+});
 
 // JWT Bearer Authentication
 var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY");
@@ -56,9 +64,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors("AllowLocalhost");
+
 app.UseHttpsRedirection();
 
-// Authorization middleware
+// Authentication and Authorization middleware
 app.UseAuthentication();
 app.UseAuthorization();
 

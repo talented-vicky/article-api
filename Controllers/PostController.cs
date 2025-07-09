@@ -30,7 +30,8 @@ public class PostController : ControllerBase
         {
             UserId = dto.UserId,
             Title = dto.Title,
-            Content = dto.Content
+            Content = dto.Content,
+            CreatedAt = dto.CreatedAt
         };
 
         _ctxt.Posts.Add(post);
@@ -52,13 +53,15 @@ public class PostController : ControllerBase
         var posts = await _ctxt.Posts
             .Include(post => post.User)
             .OrderBy(post => post.Id)
-            // .Skip()
+            .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(post => new PostDataDto
+            .Select(post => new
             {
                 Id = post.Id,
                 Title = post.Title,
                 Content = post.Content,
+                Views = post.Views,
+                Likes = post.Likes,
                 UserId = post.UserId,
                 Username = post.User.Username,
                 Email = post.User.Email
