@@ -39,21 +39,21 @@ public class UserController : ControllerBase
 
                 PostCount = u.Posts.Count,
                 RecentPosts = u.Posts
-                    .OrderByDescending(post => post.CreatedAt)
+                    .OrderByDescending(post => post.PostedAt)
                     .Take(4)
                     .Select(p => new
                     {
                         p.Id,
                         p.Title,
                         p.Content,
-                        p.Likes,
+                        p.PostLikes.Count,
                         p.Views,
-                        p.CreatedAt
+                        p.PostedAt
                     }),
                 Analytics = new 
                 {
                     TotalViews = u.Posts.Sum(post => post.Views),
-                    TotalLikes = u.Posts.Sum(post => post.Likes)
+                    TotalLikes = u.Posts.Sum(post => post.PostLikes.Count)
                 },
                 TotalComments = u.Comments.Count(comment => comment.UserId == u.Id)
             })
