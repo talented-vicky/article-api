@@ -19,33 +19,47 @@ public class PostController : ControllerBase
 
     public PostController (AppDbContext context) => _ctxt = context;
 
+    [Authorize]
     [HttpPost("create")]
     // EF Cor I/O (SaveChangesAsync, ToListAsync(), etc) uses an async to return a Task
     // so Task<ActionResult<T>> returns a an http result whose body on success is a T data
     public async Task<IActionResult> CreatePost(PostQueryDto dto)
     {
-        var user = await _ctxt.Users.FindAsync(dto.UserId);
-        if(user == null)
-            return ApiResponse.NotFound($"User does not exist");
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if(userIdClaim == null)
+            return ApiResponse.NotFound("Unauthorized user");
+        
+        var userId = int.Parse(userIdClaim.Value);
+
+        var isVisibilityValid = Enum.TryParse<Visibility>(dto.Visibility, true, out var visibility);
+        if(!isVisibilityValid)
+            return ApiResponse.NotFound("Invalid visibility value");
 
         var post = new Post
         {
-            UserId = dto.UserId,
+            UserId = userId,
             Title = dto.Title,
             Content = dto.Content,
-            PostedAt = dto.CreatedAt
+            Visibility = visibility,
+            // PostedAt = dto.CreatedAt
         };
+
+        foreach (var url in dto.ImageUrls)
+        {
+            post.PostImages.Add(new PostImage { Url = url });
+        }
 
         _ctxt.Posts.Add(post);
         await _ctxt.SaveChangesAsync();
 
-        var createdPost = new {
-            Id = post.Id,
-            Title = post.Title,
-            Content = post.Content,
-        };
-
-        return ApiResponse.Created(nameof(GetOnePost), createdPost, "Post Successfully Created");
+        // return ApiResponse.Created(nameof(GetOnePost), post, "Post Successfully Created");
+        return ApiResponse.Created(
+            this,
+            actionName: "GetOnePost",
+            routeValues: new {id = post.Id}, 
+            data: post, 
+            msg: "Post Successfully Created"
+        );
     }
 
     [HttpGet]
@@ -126,7 +140,7 @@ public class PostController : ControllerBase
 
         var post = await _ctxt.Posts.FindAsync(id);
         if(post == null)
-            return ApiResponse.NotFound("Post Not Found");
+            return ApiResponse.Error("Post Not Found");
 
         int updatedLikes;
         var alreadyLiked = await _ctxt.PostLikes.FirstOrDefaultAsync(like => like.PostId == id && like.UserId == userId);
@@ -136,7 +150,7 @@ public class PostController : ControllerBase
             await _ctxt.SaveChangesAsync();
 
             updatedLikes = await _ctxt.PostLikes.CountAsync(like => like.PostId == id);
-            return ApiResponse.Success(new {post.Id, likes = updatedLikes}, "Post Unliked");
+            return ApiResponse.Completed(true, "Post Unliked");
         }
 
         _ctxt.PostLikes.Add(new PostLike
@@ -146,35 +160,38 @@ public class PostController : ControllerBase
         });
         await _ctxt.SaveChangesAsync();
         updatedLikes = await _ctxt.PostLikes.CountAsync(like => like.PostId == id);
-        return ApiResponse.Success(new {post.Id, likes = updatedLikes}, "Post Liked");
+        return ApiResponse.Completed(true, "Post Liked");
     }
 
     [Authorize]
     [HttpPost("{id}/comment")]
-    public async Task<IActionResult> CommentPost (int postId, string content)
+    public async Task<IActionResult> CommentPost(int id, string Content) 
     {
-        var userIdClaims = User.FindFirst(ClaimTypes.NameIdentifier);
-        if(userIdClaims == null)
-            return ApiResponse.NotFound("Unauthorized User");
-        // create appropriate apiresponse for unauthroized users
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if(userIdClaim == null)
+            return ApiResponse.NotFound("Unauthenticated user");
 
-        int userId = int.Parse(userIdClaims.Value);
+        var userId = int.Parse(userIdClaim.Value);
 
-        var post = await _ctxt.Posts.FindAsync(postId);
+        var post = await _ctxt.Posts.FindAsync(id);
         if(post == null)
             return ApiResponse.NotFound("Post Not Found");
 
-        var comment = new Comment 
-        {
+        var comment = new Comment {
+            Content = Content,
+            PostId = post.Id, // Saving that gotten 4rm db
             UserId = userId,
-            PostId = post.Id,
-            Content = content,
-            CommentedAt = DateTime.UtcNow
         };
 
         _ctxt.Comments.Add(comment);
         await _ctxt.SaveChangesAsync();
 
-        return ApiResponse.Success(comment, "Comment Added to Post");
+        return ApiResponse.Created(
+            this,
+            actionName: "FetchPostComments", 
+            routeValues: new {postId = post.Id, page = 1, pageSize = 10},
+            data: comment, 
+            msg: "Comment Added"
+        );
     }
 }

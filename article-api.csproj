@@ -10,6 +10,8 @@
   <ItemGroup>
     <!-- EntityFramework Core provider -->
     
+    <PackageReference Include="CloudinaryDotNet" Version="1.27.6" />
+    
     <PackageReference Include="DotNetEnv" Version="3.1.1" />
     
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.4" />
