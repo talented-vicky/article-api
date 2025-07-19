@@ -13,19 +13,21 @@ public class CommentController : ControllerBase
     private readonly AppDbContext _ctxt;
     public CommentController(AppDbContext context) => _ctxt = context;
 
-    [HttpGet]
-    public async Task<IActionResult> FetchUserComments(int userId, int postId, int page, int pageSize )
+
+    [HttpGet("{postId}")]
+    public async Task<IActionResult> FetchPostComments(int postId, int page, int pageSize )
     {
         var totalComments = await _ctxt.Comments
-            .Where(comment => comment.UserId == userId && comment.PostId == postId)
+            .Where(comment => comment.PostId == postId)
             .CountAsync();
 
         var comments = await _ctxt.Comments
-            .Where(comment => comment.UserId == userId && comment.PostId == postId)
+            .Where(comment => comment.PostId == postId)
             .Select(c => new 
             {
                 c.Id,
-                c.Content
+                c.Content,
+                c.User.Username
             })
             .ToListAsync();
 

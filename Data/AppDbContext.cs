@@ -12,4 +12,5 @@ public class AppDbContext : DbContext
     public DbSet<Comment> Comments { get; set; } = null!;
     public DbSet<PostLike> PostLikes { get; set; } = null!;
     public DbSet<CommentLike> CommentLikes { get; set; } = null!;
+    public DbSet<PostImage> PostImages { get; set; } = null!;
 }

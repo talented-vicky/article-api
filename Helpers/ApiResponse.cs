@@ -5,6 +5,12 @@ namespace ArticleApi.Helpers;
 
 public static class ApiResponse
 {
+    public static IActionResult Completed (bool status, string? msg = null) 
+    {
+        var resp = new BaseResponse<string>(status, msg, null);
+        return new OkObjectResult(resp);
+    }
+
     public static IActionResult Success<T> (T data, string? msg = null) 
     {
         var resp = new BaseResponse<T>(true, msg, data);
@@ -17,10 +23,13 @@ public static class ApiResponse
         return new OkObjectResult(resp);
     }
 
-    public static IActionResult Created<T> (string location, T data, string? msg = null)
+    public static IActionResult Created<T> (
+        ControllerBase controller, 
+        string actionName, object routeValues, 
+        T data, string? msg = null)
     {
         var resp = new BaseResponse<T>(true, msg, data);
-        return new CreatedResult(location, resp);
+        return controller.CreatedAtAction(actionName, routeValues, resp);
     }
 
     public static IActionResult Error(string msg, int code = 404)
