@@ -1,4 +1,4 @@
-namespace ArticleApi.Controllers;
+using ArticleApi.Dtos;
 
 using CloudinaryDotNet; // has "Cloudinary" namespace
 using CloudinaryDotNet.Actions; // for "ImageUploadParams" and "FileDescription" namespaces
@@ -6,6 +6,7 @@ using ArticleApi.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 
+namespace ArticleApi.Controllers;
 
 [ApiController]
 [Route("/api/upload")]
@@ -17,9 +18,11 @@ public class UploadController : ControllerBase
 
 
     [HttpPost("media")]
-    public async Task<IActionResult> UploadMedia([FromForm] IFormFile file)
+    // public async Task<IActionResult> UploadMedia([FromForm] IFormFile file)
+    public async Task<IActionResult> UploadMedia([FromForm] MediaUploadDto fileObject)
     // "IFormFile" has methods; Length(file size), FileName(name), and OpenReadStream(reading the file uploaded)
     {
+        var file = fileObject.File;
         if(file == null || file.Length == 0)
             return ApiResponse.NotFound("No File Uploaded");
 

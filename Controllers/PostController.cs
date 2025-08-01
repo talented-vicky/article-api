@@ -66,6 +66,7 @@ public class PostController : ControllerBase
     public async Task<IActionResult> FetchPosts(int page = 1, int pageSize = 5)
     {
         var totalItems = await _ctxt.Posts.CountAsync();
+
         var posts = await _ctxt.Posts
             .Include(post => post.User)
             .OrderBy(post => post.Id)
@@ -78,6 +79,7 @@ public class PostController : ControllerBase
                 Content = post.Content,
                 Views = post.Views,
                 Likes = post.PostLikes.Count(),
+                Comments = post.Comments.Count(),
                 UserId = post.UserId,
                 Username = post.User.Username,
                 Email = post.User.Email
@@ -142,14 +144,11 @@ public class PostController : ControllerBase
         if(post == null)
             return ApiResponse.Error("Post Not Found");
 
-        int updatedLikes;
         var alreadyLiked = await _ctxt.PostLikes.FirstOrDefaultAsync(like => like.PostId == id && like.UserId == userId);
         if(alreadyLiked != null)
         {
             _ctxt.PostLikes.Remove(alreadyLiked);
             await _ctxt.SaveChangesAsync();
-
-            updatedLikes = await _ctxt.PostLikes.CountAsync(like => like.PostId == id);
             return ApiResponse.Completed(true, "Post Unliked");
         }
 
@@ -158,14 +157,13 @@ public class PostController : ControllerBase
             PostId = id,
             UserId = userId
         });
-        await _ctxt.SaveChangesAsync();
-        updatedLikes = await _ctxt.PostLikes.CountAsync(like => like.PostId == id);
+        await _ctxt.SaveChangesAsync();        
         return ApiResponse.Completed(true, "Post Liked");
     }
 
     [Authorize]
-    [HttpPost("{id}/comment")]
-    public async Task<IActionResult> CommentPost(int id, string Content) 
+    [HttpPost("comment")]
+    public async Task<IActionResult> CommentPost(CommentDto dto) 
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
         if(userIdClaim == null)
@@ -173,24 +171,24 @@ public class PostController : ControllerBase
 
         var userId = int.Parse(userIdClaim.Value);
 
-        var post = await _ctxt.Posts.FindAsync(id);
+        var post = await _ctxt.Posts.FindAsync(dto.PostId);
         if(post == null)
             return ApiResponse.NotFound("Post Not Found");
 
         var comment = new Comment {
-            Content = Content,
-            PostId = post.Id, // Saving that gotten 4rm db
+            Content = dto.Content,
+            PostId = post.Id, // Saving id gotten 4rm database
             UserId = userId,
         };
 
         _ctxt.Comments.Add(comment);
         await _ctxt.SaveChangesAsync();
 
-        return ApiResponse.Created(
+        return ApiResponse.CreatedAtRoute(
             this,
-            actionName: "FetchPostComments", 
+            routeName: "FetchPostCommentsRoute", 
             routeValues: new {postId = post.Id, page = 1, pageSize = 10},
-            data: comment, 
+            data: comment.Id, 
             msg: "Comment Added"
         );
     }
