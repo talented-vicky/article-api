@@ -7,15 +7,15 @@ using Microsoft.EntityFrameworkCore;
 namespace ArticleApi.Controllers;
 
 [ApiController]
-[Route("/api/comment")]
+[Route("/api/comments")]
 public class CommentController : ControllerBase
 {
     private readonly AppDbContext _ctxt;
     public CommentController(AppDbContext context) => _ctxt = context;
 
 
-    [HttpGet("{postId}")]
-    public async Task<IActionResult> FetchPostComments(int postId, int page, int pageSize )
+    [HttpGet("{postId}", Name="FetchPostCommentsRoute")]
+    public async Task<IActionResult> FetchPostComments(int postId, [FromQuery] int page, [FromQuery] int pageSize)
     {
         var totalComments = await _ctxt.Comments
             .Where(comment => comment.PostId == postId)
@@ -27,7 +27,8 @@ public class CommentController : ControllerBase
             {
                 c.Id,
                 c.Content,
-                c.User.Username
+                c.User.Username,
+                c.CommentedAt
             })
             .ToListAsync();
 

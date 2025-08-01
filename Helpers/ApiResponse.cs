@@ -32,6 +32,15 @@ public static class ApiResponse
         return controller.CreatedAtAction(actionName, routeValues, resp);
     }
 
+    public static IActionResult CreatedAtRoute<T> (
+        ControllerBase controller, 
+        string routeName, object routeValues, 
+        T data, string? msg = null)
+    {
+        var resp = new BaseResponse<T>(true, msg, data);
+        return controller.CreatedAtRoute(routeName, routeValues, resp);
+    }
+
     public static IActionResult Error(string msg, int code = 404)
     {
         var resp = new BaseResponse<string>(false, msg, null);
