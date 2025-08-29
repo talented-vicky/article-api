@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using NetTopologySuite.Geometries;
 // has helper methods (Ok(obj) => 200, NotFound(msg) => 404, CreatedAtAction(...) => 201, and NoContent() => 202) with default http status
 
 namespace ArticleApi.Controllers;
@@ -16,8 +17,13 @@ namespace ArticleApi.Controllers;
 public class PostController : ControllerBase
 {
     private readonly AppDbContext _ctxt;
+    private readonly GeometryFactory _geoFactory;
 
-    public PostController (AppDbContext context) => _ctxt = context;
+    public PostController (AppDbContext context, GeometryFactory geoFactory)
+    {
+        _ctxt = context;
+        _geoFactory = geoFactory;
+    }
 
     [Authorize]
     [HttpPost("create")]
@@ -41,7 +47,9 @@ public class PostController : ControllerBase
             Title = dto.Title,
             Content = dto.Content,
             Visibility = visibility,
-            // PostedAt = dto.CreatedAt
+            Location = (dto.Latitude.HasValue && dto.Longitude.HasValue)
+                ? _geoFactory.CreatePoint(new Coordinate(dto.Longitude.Value, dto.Latitude.Value))
+                : null
         };
 
         foreach (var url in dto.ImageUrls)
@@ -81,12 +89,37 @@ public class PostController : ControllerBase
                 Likes = post.PostLikes.Count(),
                 Comments = post.Comments.Count(),
                 UserId = post.UserId,
+                ImageUrls = post.PostImages,
                 Username = post.User.Username,
                 Email = post.User.Email
             })
             .ToListAsync();
         
         return ApiResponse.Paginated(posts, totalItems, page, pageSize);
+    }
+
+    [HttpGet("nearby")]
+    public async Task<IActionResult> GetNearbyPosts(double latitude, double longitude, int page = 1, int pageSize = 5, double radius = 5)
+    {
+        var  center = _geoFactory.CreatePoint(new Coordinate(longitude, latitude));
+
+        var totalItems = await _ctxt.Posts
+            .Where(post => 
+                post.Location != null &&
+                post.Location.Distance(center) <= radius * 1000)
+            .CountAsync();
+
+        var posts = await _ctxt.Posts
+            .Where(post => 
+                post.Location != null &&
+                post.Location.Distance(center) <= radius * 1000)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return posts is null 
+            ? ApiResponse.NotFound("Posts Not Found")
+            : ApiResponse.Paginated(posts, totalItems, page, pageSize);
     }
 
     [HttpGet("{id:int}")]

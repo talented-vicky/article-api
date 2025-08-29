@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using CloudinaryDotNet;
+using NetTopologySuite;
 
 using System.Text;
 
@@ -21,7 +22,10 @@ builder.Services.AddControllers();
 
 // register DbContext
 builder.Services.AddDbContext<AppDbContext>(opts => 
-    opts.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    opts.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        x => x.UseNetTopologySuite() // for geolocation
+    ));
 
 // register AuthService
 builder.Services.AddScoped<AuthService>();
@@ -83,7 +87,7 @@ var CloudinarySettings = new CloudinarySettingsDto
 };
 
 builder.Services.AddSingleton(CloudinarySettings);
-
+builder.Services.AddSingleton(NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326));
 builder.Services.AddSingleton(s => 
 {
     var account = new Account(

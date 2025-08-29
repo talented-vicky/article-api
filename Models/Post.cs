@@ -1,9 +1,11 @@
 namespace ArticleApi.Models;
 
+using NetTopologySuite.Geometries;
+
 public enum Visibility 
 {
-    Public, 
-    Private
+    Private,
+    Public
 }
 
 public class Post
@@ -12,8 +14,10 @@ public class Post
     public string Title { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
     public int Views { get; set; }
+
     public Visibility Visibility { get; set; } = Visibility.Public;
     public DateTime PostedAt { get; set; } = DateTime.UtcNow;
+    public Point? Location { get; set; } // gives (lat, long)
 
     public int UserId { get; set; }
     public User? User { get; set; }

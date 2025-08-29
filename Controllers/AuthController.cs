@@ -17,17 +17,18 @@ public class AuthController : ControllerBase
 
     public AuthController(AuthService authService) => _authService = authService;
 
-    [HttpPost("register")] // becomes -> "/api/auth/register"
-    public async Task<IActionResult> Register (RegistrationDto req)
+    [HttpPost("signup")] // becomes -> "/api/auth/signup"
+    public async Task<IActionResult> SignUp (RegistrationDto req)
     {
         var user = new User
         {
             Username = req.Username,
             Email = req.Email,
+            State = req.State,
+            Lga = req.Lga,
         };
 
-        var createdUser = await _authService.Register(user, req.Password);
-        // return Ok(createdUser);
+        var createdUser = await _authService.SignUp(user, req.Password);
         return ApiResponse.Success(createdUser, "Registration Successful");
     }
 
@@ -38,7 +39,6 @@ public class AuthController : ControllerBase
         if(token == null)
             return Unauthorized("Invalid Email or Password");
         
-        // return Ok(new { token }); 
         return ApiResponse.Success(token, "Now Logged in"); 
     }
 }
