@@ -36,6 +36,8 @@ public class UserController : ControllerBase
                 u.Id,
                 u.Username,
                 u.Email,
+                u.State,
+                u.Lga,
 
                 PostCount = u.Posts.Count,
                 RecentPosts = u.Posts

@@ -31,7 +31,7 @@ public class AuthService
     // contructor injection; for ease in unit-test & also keeps dependencies explicit
     public AuthService(AppDbContext context) => _ctxt = context;
 
-    public async Task<User> Register(User user, string password)
+    public async Task<User> SignUp(User user, string password)
     {
         CreatePasswordHash(password, out byte[] hash, out byte[] salt);
         user.PasswordHash = hash;
