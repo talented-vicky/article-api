@@ -35,6 +35,8 @@ public class UserController : ControllerBase
             {
                 u.Id,
                 u.Username,
+                Badge = EnumDisplay.GetDisplayName(u.Badge),
+                Level = EnumDisplay.GetDisplayName(u.Level),
                 u.Email,
                 u.State,
                 u.Lga,
@@ -91,10 +93,12 @@ public class UserController : ControllerBase
     {
         var user = await _ctxt.Users
             .Where(user => user.Id == id)
-            .Select(user => new UserDataDto
+            .Select(user => new
             {
                 Id = user.Id,
                 Username = user.Username,
+                Badge = user.Badge,
+                Level = user.Level,
                 Email = user.Email
             })
             .FirstOrDefaultAsync();

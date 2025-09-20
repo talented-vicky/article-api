@@ -19,11 +19,6 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modBld);
 
-        // // configuring location column
-        // modBld.Entity<Post>()
-        //     .Property(p => p.Location)
-        //     .HasColumnType("geometry Point(4326)"); //WGS 84 (standard lat/lng coordinate system, used by GPS).
-
         // creating GIST spatial index
         modBld.Entity<Post>()
             .HasIndex(p => p.Location)

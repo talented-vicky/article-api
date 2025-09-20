@@ -6,6 +6,8 @@ public class User
     
     public string Username { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
+    public Level Level { get; set; } = Level.Novice;
+    public Badge Badge { get; set; } = Badge.Poster;
     public string State { get; set; } = string.Empty;
     public string Lga { get; set; } = string.Empty;
     
