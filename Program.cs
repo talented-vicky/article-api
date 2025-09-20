@@ -6,12 +6,15 @@ using ArticleApi.Dtos;
 using DotNetEnv;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.IdentityModel.Tokens;
 using CloudinaryDotNet;
 using NetTopologySuite;
 
 using System.Text;
 
+// builder configuration
 var builder = WebApplication.CreateBuilder(args);
 
 // accessing dotenv file
@@ -29,6 +32,29 @@ builder.Services.AddDbContext<AppDbContext>(opts =>
 
 // register AuthService
 builder.Services.AddScoped<AuthService>();
+
+// configuring invalid enum types
+builder.Services.Configure<ApiBehaviorOptions>(options => 
+{
+    options.InvalidModelStateResponseFactory = context => 
+    {
+        var errors = context.ModelState
+            .Where(x => x.Value?.Errors.Count > 0)
+            .Select(x => new
+            {
+                Field = x.Key,
+                Errors = x.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>()
+            });
+
+        var response = new 
+        {   
+            Message = "Model Validation Error",
+            Errors = errors,
+        };
+
+        return new BadRequestObjectResult(response);
+    };
+});
 
 // CORS policy
 builder.Services.AddCors(options => 
@@ -102,6 +128,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 
+// app configuration
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

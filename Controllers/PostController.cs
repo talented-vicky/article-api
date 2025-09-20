@@ -37,16 +37,14 @@ public class PostController : ControllerBase
         
         var userId = int.Parse(userIdClaim.Value);
 
-        var isVisibilityValid = Enum.TryParse<Visibility>(dto.Visibility, true, out var visibility);
-        if(!isVisibilityValid)
-            return ApiResponse.NotFound("Invalid visibility value");
-
         var post = new Post
         {
             UserId = userId,
             Title = dto.Title,
             Content = dto.Content,
-            Visibility = visibility,
+            Visibility = dto.Visibility,
+            Status = dto.Status,
+            Category = dto.Category,
             Location = (dto.Latitude.HasValue && dto.Longitude.HasValue)
                 ? _geoFactory.CreatePoint(new Coordinate(dto.Longitude.Value, dto.Latitude.Value))
                 : null
@@ -88,6 +86,9 @@ public class PostController : ControllerBase
                 Views = post.Views,
                 Likes = post.PostLikes.Count(),
                 Comments = post.Comments.Count(),
+                Visibility = EnumDisplay.GetDisplayName(post.Visibility),
+                Category = EnumDisplay.GetDisplayName(post.Category),
+                Status = EnumDisplay.GetDisplayName(post.Status),
                 UserId = post.UserId,
                 ImageUrls = post.PostImages,
                 Username = post.User.Username,
